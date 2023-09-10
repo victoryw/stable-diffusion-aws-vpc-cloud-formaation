@@ -1,0 +1,81 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: A CloudFormation template to deploy the Stable Diffusion Web UI
+Resources:
+  EC2Key:
+    Type: AWS::EC2::KeyPair
+    Properties:
+      KeyName: victoryw
+      PublicKeyMaterial: ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQChrQEggXXa/EfwX77AM/NhceleWIJf1RhtlExti73Fr6bWLZJc2zxNuRi5PRcD4/wLDTpDBvUuUPMNSS8fysD10SHGcua6e4qXqNefZA14STQpLfgmRnhADRJ6duWe8z8I9kmdofHJL+UTcMs7M2d4bJ6GMnZqqK6MaG8GmLBb78WdjkohrWkO8uKKKZahtTJ5LUPPpwsbtKzTr4J5pFXYpRSggHPq1WFzxRUHrAyKjCwane0hOXYYRyYzjSA/FX5lfasO5EvQMdWcldReeNqgykoWvtBxlick5b1tkpXrF1hXYUk9O3rcFN3BUAHSzCerO626VIzQTKfpMgD70jxkSID2MIAkmyf+RkoI4sv8KPm7FVP2llg1oj/qctgPVgmotFvMgauh32nsRwFOwTBY/CMDso6liLNVdmiAd+l891bSl9advenCPhj+T5S39j/XsG0hRDkQ+pKApjeczyBRIornXhhyGkP1s03Rc4EGjxwz2TxFCB2FN8UgLbX+OdW0jmSrUBBcSqGjRRNVFrF3om31GwWiEC6CAGUzfavFfVUI7L/lWGCa2bllzICA3g1huJp2D7/k74ITwTw60IEQo9/mFYbElxybsrjiwzdTPvg9sYDnHh0ImayFEebSpZFoMopuPOI7+qwsi/BXO/rSd+pp+ZOQh6rNU0/c4QCEmQ== yanwang@Yans-MacBook-Pro.local
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: sd-webui-sg
+      GroupDescription: Security group for StableDiffusion WebUI EC2 instance
+      SecurityGroupIngress:
+          - IpProtocol: tcp
+            FromPort: 22
+            ToPort: 22
+            CidrIp: 0.0.0.0/0
+          - IpProtocol: tcp
+            FromPort: 7860
+            ToPort: 7860
+            CidrIp: 0.0.0.0/0
+  EC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: g4dn.xlarge
+      ImageId: ami-0e084ef18db283dd4
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 50 # 預設為 50GB，可依需求修改
+            VolumeType: gp3
+      "Tags": [
+        { "Key": "Name", "Value": "sd-webui" },
+      ]
+      KeyName: !Ref EC2Key
+      SecurityGroups:
+        - Ref: SecurityGroup
+      UserData:
+        'Fn::Base64': |
+          #!/bin/bash
+          sudo apt-get update
+          sudo apt-get upgrade -y
+          sudo apt install wget git python3 python3-venv build-essential net-tools -y
+          
+          # install git-lfs
+          curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
+          sudo apt-get install git-lfs
+          sudo -u ubuntu git lfs install --skip-smudge
+
+          # install pyenv
+          sudo -u ubuntu git clone https://github.com/pyenv/pyenv.git /home/ubuntu/.pyenv
+          sudo chown -R ubuntu:ubuntu /home/ubuntu/.pyenv
+          echo -e 'if shopt -q login_shell; then' \
+                '\n  export PYENV_ROOT="$HOME/.pyenv"' \
+                '\n  export PATH="$PYENV_ROOT/bin:$PATH"' \
+                '\n eval "$(pyenv init --path)"' \
+                '\nfi' >> /home/ubuntu/.bashrc
+          echo -e 'if [ -z "$BASH_VERSION" ]; then'\
+                '\n  export PYENV_ROOT="$HOME/.pyenv"'\
+                '\n  export PATH="$PYENV_ROOT/bin:$PATH"'\
+                '\n  eval "$(pyenv init --path)"'\
+                '\nfi' >> /home/ubuntu/.profile
+          echo 'if command -v pyenv >/dev/null; then eval "$(pyenv init -)"; fi' >> /home/ubuntu/.bashrc
+          
+          # install dependency of installing python 3.10.6 by pyenv
+          sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
+              libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev \
+              xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev -y
+
+          # clone sd webui
+          cd /home/ubuntu
+          git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+
+          # clone model and lora
+          git clone https://huggingface.co/AnonPerson/ChilloutMix
+          mv ChilloutMix/ChilloutMix-ni-fp16.safetensors stable-diffusion-webui/models/Stable-diffusion
+          mkdir stable-diffusion-webui/models/Lora
+          mv ChilloutMix/*.safetensors stable-diffusion-webui/models/Lora
+          rm -Rf ChilloutMix
+          sudo chown -R ubuntu:ubuntu stable-diffusion-webui/
