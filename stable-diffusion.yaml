@@ -90,3 +90,9 @@ Resources:
           mv ChilloutMix/*.safetensors stable-diffusion-webui/models/Lora
           rm -Rf ChilloutMix
           sudo chown -R ubuntu:ubuntu stable-diffusion-webui/
+          
+          echo 'finish clone model and lora' >> init.out
+          
+          #start stable-diffusion-webui
+          ./stable-diffusion-webui/webui.sh --listen
+          echo 'finish start stable-diffusion-webui' >> init.out
