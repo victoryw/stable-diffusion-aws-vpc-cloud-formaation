@@ -43,10 +43,15 @@ Resources:
           sudo apt-get upgrade -y
           sudo apt install wget git python3 python3-venv build-essential net-tools -y
           
+          echo 'finish install wget git python3 and others' >> init.out
+          
           # install git-lfs
           curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
           sudo apt-get install git-lfs
           sudo -u ubuntu git lfs install --skip-smudge
+          
+          echo 'finish install git-lfs' >> init.out
+
 
           # install pyenv
           sudo -u ubuntu git clone https://github.com/pyenv/pyenv.git /home/ubuntu/.pyenv
@@ -63,14 +68,20 @@ Resources:
                 '\nfi' >> /home/ubuntu/.profile
           echo 'if command -v pyenv >/dev/null; then eval "$(pyenv init -)"; fi' >> /home/ubuntu/.bashrc
           
+          echo 'finish install pyenv' >> init.out
+          
           # install dependency of installing python 3.10.6 by pyenv
           sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
               libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev \
               xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev -y
+          
+          echo 'finish install dependency of installing python 3.10.6 by pyenv' >> init.out
 
           # clone sd webui
           cd /home/ubuntu
           git clone https://github.com/AUTOMATIC1111/stable-diffusion-webui.git
+          
+          echo 'finish install clone sd webui' >> init.out
 
           # clone model and lora
           git clone https://huggingface.co/AnonPerson/ChilloutMix
