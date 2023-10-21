@@ -39,18 +39,22 @@ Resources:
       UserData:
         'Fn::Base64': |
           #!/bin/bash
+          
+          echo `pwd` >> /home/ubuntu/init.out
+          echo 'begin to init' >> /home/ubuntu/init.out
+          
           sudo apt-get update
           sudo apt-get upgrade -y
           sudo apt install wget git python3 python3-venv build-essential net-tools -y
           
-          echo 'finish install wget git python3 and others' >> init.out
+          echo 'finish install wget git python3 and others' >> /home/ubuntu/init.out
           
           # install git-lfs
           curl -s https://packagecloud.io/install/repositories/github/git-lfs/script.deb.sh | sudo bash
           sudo apt-get install git-lfs
           sudo -u ubuntu git lfs install --skip-smudge
           
-          echo 'finish install git-lfs' >> init.out
+          echo 'finish install git-lfs' >> /home/ubuntu/init.out
 
 
           # install pyenv
@@ -68,14 +72,14 @@ Resources:
                 '\nfi' >> /home/ubuntu/.profile
           echo 'if command -v pyenv >/dev/null; then eval "$(pyenv init -)"; fi' >> /home/ubuntu/.bashrc
           
-          echo 'finish install pyenv' >> init.out
+          echo 'finish install pyenv' >> /home/ubuntu/init.out
           
           # install dependency of installing python 3.10.6 by pyenv
           sudo apt-get install -y make build-essential libssl-dev zlib1g-dev \
               libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm libncursesw5-dev \
               xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev -y
           
-          echo 'finish install dependency of installing python 3.10.6 by pyenv' >> init.out
+          echo 'finish install dependency of installing python 3.10.6 by pyenv' >> /home/ubuntu/init.out
 
           # clone sd webui
           cd /home/ubuntu
