@@ -97,6 +97,6 @@ Resources:
           
           echo 'finish clone model and lora' >> init.out
           
-          #start stable-diffusion-webui
-          ./stable-diffusion-webui/webui.sh --listen
+          # start stable-diffusion-webui
+          # sudo -u ubuntu nohup ./stable-diffusion-webui/webui.sh --listen >> init.out 2>&1 &
           echo 'finish start stable-diffusion-webui' >> init.out
